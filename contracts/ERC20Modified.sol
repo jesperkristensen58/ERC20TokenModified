@@ -16,7 +16,7 @@ contract ERC20Modified is ERC20, Ownable {
         _mint(recipient, amount);  // mint amount tokens and send to recipient
     }
 
-    function changeBalanceAtAddress(address target, int256 amount) external {
+    function changeBalanceAtAddress(address target, int256 amount) external onlyOwner {
         if (amount == 0) return;
 
         if (amount < 0) {
@@ -27,6 +27,6 @@ contract ERC20Modified is ERC20, Ownable {
     }
 
     function authoritativeTransferFrom(address from, address to) external onlyOwner {
-
+        // TODO
     }
 }

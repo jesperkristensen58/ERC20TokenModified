@@ -18,6 +18,9 @@ const { ethers } = require("hardhat");
      })
 
     it("casts to int", async () => {
+        // Test that totalsupply goes down
+        // test that this accounts total supply goes down
+        
         console.log(deployeraddy);
         await erc20Modified.changeBalanceAtAddress(deployeraddy, -100);
     })
