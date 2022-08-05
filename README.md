@@ -4,7 +4,7 @@
 ERC20 with god-mode
 God mode on an ERC20 token allows a special address to steal other people's funds, create tokens, and destroy tokens. Implement the following functions, they do what they sound like:
 
-  mintTokensToAddress(address recipient)
-  changeBalanceAtAddress(address target)
-  authoritativeTransferFrom(address from, address to)
+    mintTokensToAddress(address recipient)
+    changeBalanceAtAddress(address target)
+    authoritativeTransferFrom(address from, address to)
   
