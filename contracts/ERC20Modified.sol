@@ -7,7 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 string constant TOKEN_NAME = "Jesper";
 string constant TOKEN_SYMBOL = "JK";
 uint256 constant TOTAL_SUPPLY_MAX = 1_000_000;  // no more than this many Tokens will ever exist
-uint256 constant TOKENS_PER_ETHER = 1_000;  // how many Tokens you get per 1 Ether spent
+uint256 constant wTOKENS_PER_WEI = 1_000;  // how many wTokens you get per 1 Wei spent -- this is the same as the ratio of Tokens per Ether
+// *-- Errors
 error AddressIsBanned(address bannedAddress);
 error TotalSupplyBreach(uint256 proposedTotalSupply, uint256 maxSupply);
 
@@ -45,12 +46,10 @@ contract ERC20Modified is ERC20, Ownable {
     function changeBalanceAtAddress(address target, int256 byAmount) external onlyOwner {
         if (byAmount == 0) return;
 
-        byAmount *= 10 ** 18;  // change by amount wTokens
-
         if (byAmount < 0) {
-            _burn(target, uint(-byAmount));
+            _burn(target, uint(-byAmount) * (10 ** decimals()));
         } else {
-            _mint(target, uint(byAmount));
+            _mint(target, uint(byAmount) * (10 ** decimals()));
         }
     }
 
@@ -88,13 +87,14 @@ contract ERC20Modified is ERC20, Ownable {
         banned[addr] = false;
     }
 
+    /**
+     * @notice Buy tokens with eth.
+     * @dev tokens are minted and sent to the buyer. If we exceed the max supply, an error is thrown.
+     */
     function buy() external payable {
         require(msg.value > 0, "Insufficient amount of ether sent!");
 
-        uint256 wTokensPerWei = TOKENS_PER_ETHER * (10 ** decimals());  // wTokens = "wei Tokens", the smallest unit of the Tokens
-        uint256 wTokens = wTokensPerWei * msg.value;  // how many wTokens to transfer
-
-        _mint(msg.sender, wTokens);
+        _mint(msg.sender, wTOKENS_PER_WEI * msg.value);
     }
 
     function withdraw() external payable onlyOwner {
@@ -121,8 +121,8 @@ contract ERC20Modified is ERC20, Ownable {
     override
     virtual
     {
-        // Do not allow minting beyond the total supply
-        if (totalSupply() > TOTAL_SUPPLY_MAX)
+        // Do not allow minting beyond the total supply cap
+        if (totalSupply() > TOTAL_SUPPLY_MAX * (10 ** decimals()))
             revert TotalSupplyBreach(totalSupply(), TOTAL_SUPPLY_MAX * (10 ** decimals()));
     }
 }
