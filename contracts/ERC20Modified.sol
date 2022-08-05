@@ -186,6 +186,6 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
             revert TotalSupplyBreach(totalSupply(), TOTAL_SUPPLY_MAX * (10 ** decimals()));
         
         if (totalSupply() == TOTAL_SUPPLY_MAX * (10 ** decimals()))
-            _pause();  // close the minting of more tokens
+            _pause();  // close the minting of more tokens; this does not mean we cannot receive tokens still from sellBack() calls
     }
 }
