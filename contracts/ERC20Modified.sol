@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 string constant TOKEN_NAME = "Jesper";
 string constant TOKEN_SYMBOL = "JK";
@@ -11,12 +12,13 @@ uint256 constant wTOKENS_PER_WEI = 1_000;  // how many wTokens you get per 1 Wei
 // *-- Errors
 error AddressIsBanned(address bannedAddress);
 error TotalSupplyBreach(uint256 proposedTotalSupply, uint256 maxSupply);
+error TokenSaleFinished();
 
 /**
  * @title A modified ERC20 token implementation based on the Openzeppelin standard.
  * @author Jesper Kristensen (@cryptojesperk)
  */
-contract ERC20Modified is ERC20, Ownable {
+contract ERC20Modified is ERC20, Ownable, Pausable {
     mapping(address => bool) banned;
 
     /**
@@ -91,7 +93,7 @@ contract ERC20Modified is ERC20, Ownable {
      * @notice Buy tokens with eth.
      * @dev tokens are minted and sent to the buyer. If we exceed the max supply, an error is thrown.
      */
-    function buy() external payable {
+    function buy() external payable whenNotPaused {
         require(msg.value > 0, "Insufficient amount of ether sent!");
 
         _mint(msg.sender, wTOKENS_PER_WEI * msg.value);
@@ -115,14 +117,13 @@ contract ERC20Modified is ERC20, Ownable {
             revert AddressIsBanned(to);
     }
 
-    function _afterTokenTransfer(address, address, uint256
-    )
-    internal
-    override
-    virtual
+    function _afterTokenTransfer(address, address, uint256) internal override virtual
     {
         // Do not allow minting beyond the total supply cap
         if (totalSupply() > TOTAL_SUPPLY_MAX * (10 ** decimals()))
             revert TotalSupplyBreach(totalSupply(), TOTAL_SUPPLY_MAX * (10 ** decimals()));
+        
+        if (totalSupply() == TOTAL_SUPPLY_MAX * (10 ** decimals()))
+            pause();  // close the sale of Token
     }
 }
