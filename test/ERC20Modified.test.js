@@ -13,14 +13,19 @@ describe('ERC20Modified Contract', function () {
 
         deployeraddy = deployer.address;
         account1 = acc1.address;
-        const ERC20Modified = await ethers.getContractFactory("ERC20Modified");
+        ERC20Modified = await ethers.getContractFactory("ERC20Modified");
         erc20Modified = await ERC20Modified.deploy(1000);
         await erc20Modified.deployed();
     })
 
     it("should deploy to an address", async () => {
-        expect(erc20Modified.address).to.not.be.null;
-        // await erc20Modified.changeBalanceAtAddress(deployeraddy, -100);
+        expect(await erc20Modified.address).to.not.be.null;
+    })
+
+    it("should assign the tokens to the contract", async () => {
+        expect(ethers.utils.formatEther(await erc20Modified.balanceOf(erc20Modified.address))).to.equal("1000.0");
+        expect(ethers.utils.formatEther(await erc20Modified.balanceOf(deployeraddy))).to.equal("0.0");
+        expect(ethers.utils.formatEther(await erc20Modified.balanceOf(account1))).to.equal("0.0");
     })
 });
 
@@ -43,4 +48,6 @@ describe("Test God Mode", function () {
         expect(await erc20Modified.owner()).to.not.equal(account1);
         expect(await erc20Modified.owner()).to.not.equal(account2);
     });
+
+    it("should allocate")
 });
