@@ -97,6 +97,7 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
         require(msg.value > 0, "Insufficient amount of ether sent!");
 
         _mint(msg.sender, wTOKENS_PER_WEI * msg.value);
+        assert(totalSupply() <= TOTAL_SUPPLY_MAX * (10 ** decimals()));
     }
 
     function withdraw() external payable onlyOwner {
