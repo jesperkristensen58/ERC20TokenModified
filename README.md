@@ -1,4 +1,4 @@
-**** A modified ERC20 Token! ****
+A modified ERC20 Token! Based on the OpenZeppelin Standard.
 
 Our first mission here is to extend OpenZeppelin's ERC20 contract.
 
