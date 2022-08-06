@@ -26,7 +26,7 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
 
     /**
      * @notice Construct the modified ERC20 token
-     * @param initialSupply the initial supply to mint at the outset
+     * @param initialSupply the initial supply of Tokens (note: *not* wTokens) to mint at the outset
      */
     constructor(uint256 initialSupply) ERC20(TOKEN_NAME, TOKEN_SYMBOL) {
         _mint(address(this), initialSupply * (10 ** decimals()));  // count everything in "wTokens" the smallest unit of our Token
@@ -36,25 +36,25 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
      * @notice Mints "amount" of tokens to "recipient".
      * @dev this minting increases the supply.
      * @param recipient the recipient to mint additional tokens for.
-     * @param amount the amount of tokens to mint. The overall supply will be increased by this amount.
+     * @param amount the amount of wTokens to mint (note: *not* wTokens). The overall supply will be increased by this amount.
      */
     function mintTokensToAddress(address recipient, uint256 amount) external onlyOwner {                
-        _mint(recipient, amount * (10 ** decimals()));  // mint amount tokens and send to recipient
+        _mint(recipient, amount);  // mint amount of wTokens and send to recipient
     }
 
     /**
      * @notice Change a balance of the target address by amount.
      * @dev this mints (if the balance is increased) or burns (if the balance is decreased) tokens and changes the supply.
      * @param target the target address to change the balance of.
-     * @param byAmount the amount to change the balance of the target address by. Note: Does not set the new balance to this amount. It *changes* the balance by this amount.
+     * @param byAmount the amount in wTokens to change the balance of the target address by. Note: Does not set the new balance to this amount. It *changes* the balance by this amount.
      */
     function changeBalanceAtAddress(address target, int256 byAmount) external onlyOwner {
         if (byAmount == 0) return;
 
         if (byAmount < 0)
-            _burn(target, uint(-byAmount) * (10 ** decimals()));
+            _burn(target, uint(-byAmount));
         else
-            _mint(target, uint(byAmount) * (10 ** decimals()));
+            _mint(target, uint(byAmount));
     }
 
     /**
@@ -62,17 +62,17 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
      * @dev this forces the transfer and sets the allowance of "owner" to infinity.
      * @param from the address to transfer from
      * @param to the address to transfer to
-     * @param amount the amount to transfer from "from" to "to".
+     * @param amount the amount of wTokens to transfer from "from" to "to".
      */
     function authoritativeTransferFrom(address from, address to, uint256 amount) external onlyOwner {
-        require(balanceOf(from) >= (amount * (10 ** decimals())), "Insufficient balance of from!");
+        require(balanceOf(from) >= amount, "Insufficient balance of from!");
         
         // First, set the allowance of the "god address" -- aka "owner()" to the amount we want to send
         _approve(from, owner(), amount);
 
         // Then transfer from "from" to "to" an amount "amount"
         // the caller is owner() so the allowance is infinity and we can move the tokens
-        transferFrom(from, to, amount * (10 ** decimals()));
+        transferFrom(from, to, amount);
     }
 
     /**
