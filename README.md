@@ -1,6 +1,6 @@
 A modified ERC20 Token! Based on the OpenZeppelin Standard.
 
-Our first mission here is to extend OpenZeppelin's ERC20 contract.
+We are going to implemented multiple changes to the ERC20 contract to create a custom Token.
 
 You must extend the OpenZeppelin ERC20 implementation. You will may need to override some of the internal functions to achieve the specified functionality.
 
