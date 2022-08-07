@@ -1,17 +1,18 @@
-A modified ERC20 Token! Based on the OpenZeppelin Standard.
+<h1>A modified ERC20 Token! Based on the OpenZeppelin Standard.</h1>
 
 We are going to implemented multiple changes to the ERC20 contract to create a custom Token.
+For how to run this code, please see the bottom of this documentation.
 
 The task is this:
 You must extend the OpenZeppelin ERC20 implementation. You will may need to override some of the internal functions to achieve the specified functionality.
 
-*Deliverables*
+<h2>Deliverables</h2>
     ERC20 with god-mode
     ERC20 with sanctions
     ERC20 with token sale
     ERC20 with token sale and partial refunds
 
-*Description of Deliverables*
+<h2>Description of Deliverables</h2>
 You must extend the OpenZeppelin ERC20 implementation. You will may need to override some of the internal functions to achieve the specified functionality.
 
 > ERC20 with god-mode
@@ -40,3 +41,20 @@ Users can buy and sell as they please, but of course they lose ether if they kee
 
 If someone tries to mint tokens when the supply is used up and the contract isn’t holding any tokens, that operation should fail. The maximum supply should remain at 1 million
 IMPORTANT: Be aware of integer division issues!
+
+<h1>How to Run the Code?</h1>
+
+This project is built with Hardhat. First, to compile the contract inside `contracts/` please run:
+
+    npx hardhat compile
+
+To test the code (and run the tests inside the `tests/` directory), please run:
+
+    npx hardhat test
+
+## Contact
+[![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/cryptojesperk.svg?style=social&label=Follow%20%40cryptojesperk)](https://twitter.com/cryptojesperk)
+
+
+## License
+This project uses the following license: [MIT](https://github.com/bisguzar/twitter-scraper/blob/master/LICENSE).
