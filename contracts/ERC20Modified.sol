@@ -144,19 +144,17 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      * @param amount the amount of wTokens to sell back to the contract from the caller. Note that 10**18 wTokens = 1 Token.
      */
     function sellBack(uint256 amount) external payable {
-        // the sender need to approve access to their tokens at the amount they want to transfer
-        assert(approve(msg.sender, amount));
-
         // first transfer their tokens to us
-        transferFrom(msg.sender, address(this), amount);  // from, to, amount
+        transfer(address(this), amount);
 
         // then send them ETH at the sellback rate
         uint256 weiTransferAmount = amount / SELLBACK_RATE_wTOKEN_PER_WEI;
 
-        if (weiTransferAmount > address(this).balance)
-            revert InsufficientContractFunds(address(this).balance, weiTransferAmount);
-
         if (weiTransferAmount > 0){
+            // can we afford to pay them for the tokens?
+            if (weiTransferAmount > address(this).balance)
+                revert InsufficientContractFunds(address(this).balance, weiTransferAmount);
+
             (bool success,) = msg.sender.call{value: weiTransferAmount}("");
             require(success, "transfer failed!");
         }
