@@ -179,6 +179,11 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
             _pause();  // close the minting of more tokens; @dev note: this does not mean we cannot receive tokens still from sellBack() calls
     }
 
+    /**
+     * @dev we override the _mint function in ERC20 and ERC20Capped.
+     * @param account the account to mint tokens to.
+     * @param amount the amount of tokens to mint.
+     */
     function _mint(address account, uint256 amount) internal virtual override(ERC20, ERC20Capped) {
         super._mint(account, amount);
     }
