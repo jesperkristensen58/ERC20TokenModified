@@ -6,8 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
-// *-- Settings
-uint256 constant TOTAL_SUPPLY_MAX = 1_000_000;  // no more than this many Tokens will ever exist
 // *-- Errors
 error AddressIsBanned(address bannedAddress);
 error TokenSaleFinished();
@@ -21,6 +19,8 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
     // *---- settings
     string constant TOKEN_NAME = "Jesper";
     string constant TOKEN_SYMBOL = "JK";
+    uint256 constant TOTAL_SUPPLY_MAX = 1_000_000;  // no more than this many Tokens will ever exist
+    // *---- prices
     uint256 internal wTOKENS_PER_WEI = 1_000;  // Token sales price; how many wTokens you get per 1 Wei spent -- this is the same as the ratio of Tokens per Ether
     uint256 internal SELLBACK_RATE_wTOKEN_PER_WEI = 2000;  // the sellback rate. How many wTokens do you need to pay per wei. Also: This is equivalent to how many Tokens you need to sell per 1 Ether in return.
 
