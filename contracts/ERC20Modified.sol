@@ -141,6 +141,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
 
     /**
      * @notice This function allows users to sell their Token back to the smart contract in exchange for Ether.
+     * @dev if the contract cannot pay the caller an error is raised
      * @param amount the amount of wTokens to sell back to the contract from the caller. Note that 10**18 wTokens = 1 Token.
      */
     function sellBack(uint256 amount) external payable {
