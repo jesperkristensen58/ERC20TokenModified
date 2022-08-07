@@ -35,15 +35,6 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
     }
 
     /**
-     * @notice do not allow a caller on the banned list.
-     * @dev checks for membership of internal banned mapping. Use ban() and unban() functions to toggle.
-     */
-    modifier onlyNotBanned {
-        require(!banned[msg.sender], "Action not allowed!");
-        _;
-    }
-
-    /**
      * @notice Change the price of the token. The price is in Tokens per Ether. 1000 means you get 1000 Tokens per Ether.
      * @dev compare to "setSellPrice"
      * @param newPrice the new price of the token during a buy event (users buying tokens for eth).
@@ -122,7 +113,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      * @notice Buy tokens with eth.
      * @dev tokens are minted and sent to the buyer. If we exceed the max supply, an error is thrown.
      */
-    function buy() external payable onlyNotBanned {
+    function buy() external payable {
         require(msg.value > 0, "Insufficient amount of ether sent!");
 
         uint256 wTokensToBuy = wTOKENS_PER_WEI * msg.value;
@@ -152,7 +143,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      * @notice This function allows users to sell their Token back to the smart contract in exchange for Ether.
      * @param amount the amount of wTokens to sell back to the contract from the caller. Note that 10**18 wTokens = 1 Token.
      */
-    function sellBack(uint256 amount) external payable onlyNotBanned {
+    function sellBack(uint256 amount) external payable {
         // the sender need to approve access to their tokens at the amount they want to transfer
         assert(approve(msg.sender, amount));
 
