@@ -170,6 +170,7 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
 
     /**
      * @dev Check that the total supply has not been exceeded and that if the total supply is hit, we pause the minting of more tokens.
+     * @dev when we hit the token supply limit this will pause the contract (paused() == true); which means we cannot mint new tokens. But we can still sell tokens from our internal storage (balanceOf(address(this))).
      * @param from the address to transfer tokens from
      * @param to the address to transfer tokens to
      * @param amount the amount to transfer
@@ -186,6 +187,6 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
             revert TotalSupplyBreach(totalSupply(), TOTAL_SUPPLY_MAX * (10 ** decimals()));
         
         if (totalSupply() == TOTAL_SUPPLY_MAX * (10 ** decimals()))
-            _pause();  // close the minting of more tokens; this does not mean we cannot receive tokens still from sellBack() calls
+            _pause();  // close the minting of more tokens; @dev note: this does not mean we cannot receive tokens still from sellBack() calls
     }
 }
