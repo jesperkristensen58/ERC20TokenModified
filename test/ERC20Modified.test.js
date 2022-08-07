@@ -123,7 +123,7 @@ describe("Test God Mode", function () {
         await expect(ethers.utils.formatEther(await erc20Modified.balanceOf(deployeraddy))).to.equal("0.0");
 
         // deployeraddy does not have any tokens yet
-        await expect(erc20Modified.authoritativeTransferFrom(deployeraddy, account2, 24)).to.be.revertedWith("Insufficient balance of from!");
+        await expect(erc20Modified.authoritativeTransferFrom(deployeraddy, account2, 24)).to.be.revertedWith("ERC20: transfer amount exceeds balance");
         
         // now try with tokens
         await erc20Modified.mintTokensToAddress(deployeraddy, 1e9);  // mint 1 gwTokens
@@ -197,7 +197,7 @@ describe("Test God Mode", function () {
 
         // get the owner bal before withdraw
         let beforedeployer = ethers.utils.formatEther(await ethers.provider.getBalance(deployeraddy));
-        expect(beforedeployer).to.equal("9999.957124204505014028");
+        expect(beforedeployer).to.equal("9999.958848192139409562");
 
         // now withdraw from the contract to the owner
         await erc20Modified.withdraw();
@@ -210,7 +210,7 @@ describe("Test God Mode", function () {
         afterefther = ethers.utils.formatEther(await ethers.provider.getBalance(deployeraddy));
 
         // received 1 ether
-        expect(afterefther).to.equal("10000.957093112900129878");
+        expect(afterefther).to.equal("10000.958817105945067592");
     });
 
     it("should allow a sellback", async () => {
@@ -225,7 +225,7 @@ describe("Test God Mode", function () {
 
         // before we sell, get amount:
         let amnt = ethers.utils.formatEther(await ethers.provider.getBalance(account1));
-        expect(amnt).to.equal("9996.999616373730492016");
+        expect(amnt).to.equal("9996.999622535959975422");
 
         // now sell 500 Tokens
         await erc20Modified.connect(acc1).sellBack(ethers.utils.parseUnits('500', 'ether'));
@@ -235,14 +235,13 @@ describe("Test God Mode", function () {
 
         // but we sold back ether, so we should have received some ether
         amnt = ethers.utils.formatEther(await ethers.provider.getBalance(account1));
-        expect(amnt).to.equal("9997.249540031727722054");
+        expect(amnt).to.equal("9997.249547465644581412");
         // ^^ we received 0.25 ether for the sale of 500 Tokens (1000 Tokens is 1 ether)
     });
 
     it("should not allow to buy more tokens than what we have", async () => {
-        await expect(erc20Modified.connect(acc1).buy({value: ethers.utils.parseUnits('1000', 'ether')})).to.be.revertedWithCustomError(
-            erc20Modified,
-            "TotalSupplyBreach"
+        await expect(erc20Modified.connect(acc1).buy({value: ethers.utils.parseUnits('1000', 'ether')})).to.be.revertedWith(
+            "ERC20Capped: cap exceeded"
         );
     });
 });

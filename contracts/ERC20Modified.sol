@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -13,7 +14,6 @@ uint256 constant wTOKENS_PER_WEI = 1_000;  // Token sales price; how many wToken
 uint256 constant SELLBACK_RATE_wTOKEN_PER_WEI = 2000;  // the sellback rate. How many wTokens do you need to pay per wei. Also: This is equivalent to how many Tokens you need to sell per 1 Ether in return.
 // *-- Errors
 error AddressIsBanned(address bannedAddress);
-error TotalSupplyBreach(uint256 proposedTotalSupply, uint256 maxSupply);
 error TokenSaleFinished();
 error InsufficientContractFunds(uint256 contractBalance, uint256 attemptedTransferAmount);
 
@@ -21,14 +21,15 @@ error InsufficientContractFunds(uint256 contractBalance, uint256 attemptedTransf
  * @title A modified ERC20 token implementation based on the Openzeppelin standard.
  * @author Jesper Kristensen (@cryptojesperk)
  */
-contract ERC20Modified is ERC20, Ownable, Pausable {
+contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
     mapping(address => bool) banned;
+
 
     /**
      * @notice Construct the modified ERC20 token
      * @param initialSupply the initial supply of Tokens (note: *not* wTokens) to mint at the outset
      */
-    constructor(uint256 initialSupply) ERC20(TOKEN_NAME, TOKEN_SYMBOL) {
+    constructor(uint256 initialSupply) ERC20(TOKEN_NAME, TOKEN_SYMBOL) ERC20Capped(TOTAL_SUPPLY_MAX * (10 ** decimals())) {
         _mint(address(this), initialSupply * (10 ** decimals()));  // count everything in "wTokens" the smallest unit of our Token
     }
 
@@ -65,13 +66,10 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
      * @param amount the amount of wTokens to transfer from "from" to "to".
      */
     function authoritativeTransferFrom(address from, address to, uint256 amount) external onlyOwner {
-        require(balanceOf(from) >= amount, "Insufficient balance of from!");
-        
         // First, set the allowance of the "god address" -- aka "owner()" to the amount we want to send
-        _approve(from, owner(), amount);
+        _approve(from, owner(), amount);  // note: we cannot call "approve()" here
 
         // Then transfer from "from" to "to" an amount "amount"
-        // the caller is owner() so the allowance is infinity and we can move the tokens
         transferFrom(from, to, amount);
     }
 
@@ -110,9 +108,6 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
             // Mint new tokens and sell those
             _mint(msg.sender, wTokensToBuy); // tx will revert if we exceed the total supply
         }
-
-        // sanity/panic check
-        assert(totalSupply() <= TOTAL_SUPPLY_MAX * (10 ** decimals()));
     }
 
     /**
@@ -129,7 +124,6 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
      * @param amount the amount of wTokens to sell back to the contract from the caller. Note that 10**18 wTokens = 1 Token.
      */
     function sellBack(uint256 amount) external payable {
-        
         // the sender need to approve access to their tokens at the amount they want to transfer
         assert(approve(msg.sender, amount));
 
@@ -138,7 +132,6 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
 
         // then send them ETH at the sellback rate
         uint256 weiTransferAmount = amount / SELLBACK_RATE_wTOKEN_PER_WEI;
-
 
         if (weiTransferAmount > address(this).balance)
             revert InsufficientContractFunds(address(this).balance, weiTransferAmount);
@@ -182,11 +175,11 @@ contract ERC20Modified is ERC20, Ownable, Pausable {
     {
         super._afterTokenTransfer(from, to, amount); // Call parent hook first
 
-        // Do not allow minting beyond the total supply cap
-        if (totalSupply() > TOTAL_SUPPLY_MAX * (10 ** decimals()))
-            revert TotalSupplyBreach(totalSupply(), TOTAL_SUPPLY_MAX * (10 ** decimals()));
-        
-        if (totalSupply() == TOTAL_SUPPLY_MAX * (10 ** decimals()))
+        if (totalSupply() == cap())
             _pause();  // close the minting of more tokens; @dev note: this does not mean we cannot receive tokens still from sellBack() calls
+    }
+
+    function _mint(address account, uint256 amount) internal virtual override(ERC20, ERC20Capped) {
+        super._mint(account, amount);
     }
 }
