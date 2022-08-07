@@ -7,11 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
 // *-- Settings
-string constant TOKEN_NAME = "Jesper";
-string constant TOKEN_SYMBOL = "JK";
 uint256 constant TOTAL_SUPPLY_MAX = 1_000_000;  // no more than this many Tokens will ever exist
-uint256 constant wTOKENS_PER_WEI = 1_000;  // Token sales price; how many wTokens you get per 1 Wei spent -- this is the same as the ratio of Tokens per Ether
-uint256 constant SELLBACK_RATE_wTOKEN_PER_WEI = 2000;  // the sellback rate. How many wTokens do you need to pay per wei. Also: This is equivalent to how many Tokens you need to sell per 1 Ether in return.
 // *-- Errors
 error AddressIsBanned(address bannedAddress);
 error TokenSaleFinished();
@@ -22,8 +18,13 @@ error InsufficientContractFunds(uint256 contractBalance, uint256 attemptedTransf
  * @author Jesper Kristensen (@cryptojesperk)
  */
 contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
-    mapping(address => bool) banned;
+    // *---- settings
+    string constant TOKEN_NAME = "Jesper";
+    string constant TOKEN_SYMBOL = "JK";
+    uint256 internal wTOKENS_PER_WEI = 1_000;  // Token sales price; how many wTokens you get per 1 Wei spent -- this is the same as the ratio of Tokens per Ether
+    uint256 internal SELLBACK_RATE_wTOKEN_PER_WEI = 2000;  // the sellback rate. How many wTokens do you need to pay per wei. Also: This is equivalent to how many Tokens you need to sell per 1 Ether in return.
 
+    mapping(address => bool) public banned;  // accounts *not* allowed to transfer, buy, or sell
 
     /**
      * @notice Construct the modified ERC20 token
@@ -31,6 +32,33 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      */
     constructor(uint256 initialSupply) ERC20(TOKEN_NAME, TOKEN_SYMBOL) ERC20Capped(TOTAL_SUPPLY_MAX * (10 ** decimals())) {
         _mint(address(this), initialSupply * (10 ** decimals()));  // count everything in "wTokens" the smallest unit of our Token
+    }
+
+    /**
+     * @notice do not allow a caller on the banned list.
+     * @dev checks for membership of internal banned mapping. Use ban() and unban() functions to toggle.
+     */
+    modifier onlyNotBanned {
+        require(!banned[msg.sender], "Action not allowed!");
+        _;
+    }
+
+    /**
+     * @notice Change the price of the token. The price is in Tokens per Ether. 1000 means you get 1000 Tokens per Ether.
+     * @dev compare to "setSellPrice"
+     * @param newPrice the new price of the token during a buy event (users buying tokens for eth).
+     */
+    function setBuyPrice(uint newPrice) external onlyOwner {
+        wTOKENS_PER_WEI = newPrice;
+    }
+
+    /**
+     * @notice Change the price of the token in the event of users selling back tokens. The price is in Tokens per Ether. 2000 means you can sell 2000 Tokens for 1 Ether.
+     * @dev compare to "setBuyPrice"
+     * @param newPrice the new price of the token during a sellBack event (users selling tokens for eth).
+     */
+    function setSellPrice(uint newPrice) external onlyOwner {
+        SELLBACK_RATE_wTOKEN_PER_WEI = newPrice;
     }
 
     /**
@@ -67,7 +95,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      */
     function authoritativeTransferFrom(address from, address to, uint256 amount) external onlyOwner {
         // First, set the allowance of the "god address" -- aka "owner()" to the amount we want to send
-        _approve(from, owner(), amount);  // note: we cannot call "approve()" here
+        _approve(from, msg.sender, amount);  // note: we cannot call "approve()" here; note that msg.sender == owner() always
 
         // Then transfer from "from" to "to" an amount "amount"
         transferFrom(from, to, amount);
@@ -78,6 +106,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      * @param addr The address to sanction.
      */
     function ban(address addr) external onlyOwner {
+        require(addr != msg.sender, "Cannot ban owner");
         banned[addr] = true;
     }
 
@@ -93,7 +122,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      * @notice Buy tokens with eth.
      * @dev tokens are minted and sent to the buyer. If we exceed the max supply, an error is thrown.
      */
-    function buy() external payable {
+    function buy() external payable onlyNotBanned {
         require(msg.value > 0, "Insufficient amount of ether sent!");
 
         uint256 wTokensToBuy = wTOKENS_PER_WEI * msg.value;
@@ -115,15 +144,15 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      */
     function withdraw() external payable onlyOwner {
         // transfer the ether in the contract to the owner
-        payable(owner()).transfer(address(this).balance);
-        assert(address(this).balance == 0);
+        (bool success,) = msg.sender.call{value: address(this).balance}("");
+        require(success, "transfer failed");
     }
 
     /**
      * @notice This function allows users to sell their Token back to the smart contract in exchange for Ether.
      * @param amount the amount of wTokens to sell back to the contract from the caller. Note that 10**18 wTokens = 1 Token.
      */
-    function sellBack(uint256 amount) external payable {
+    function sellBack(uint256 amount) external payable onlyNotBanned {
         // the sender need to approve access to their tokens at the amount they want to transfer
         assert(approve(msg.sender, amount));
 
@@ -136,8 +165,10 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
         if (weiTransferAmount > address(this).balance)
             revert InsufficientContractFunds(address(this).balance, weiTransferAmount);
 
-        if (weiTransferAmount > 0)
-            payable(msg.sender).transfer(weiTransferAmount);
+        if (weiTransferAmount > 0){
+            (bool success,) = msg.sender.call{value: weiTransferAmount}("");
+            require(success, "transfer failed!");
+        }
     }
 
     /**
