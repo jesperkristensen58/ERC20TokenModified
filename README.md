@@ -3,8 +3,7 @@
 We are going to implemented multiple changes to the ERC20 contract to create a custom Token.
 For how to run this code, please see the bottom of this documentation.
 
-The task is this:
-You must extend the OpenZeppelin ERC20 implementation. You will may need to override some of the internal functions to achieve the specified functionality.
+The task is this: "You must extend the OpenZeppelin ERC20 implementation. You will may need to override some of the internal functions to achieve the specified functionality."
 
 <h2>Deliverables</h2>
     ERC20 with god-mode
