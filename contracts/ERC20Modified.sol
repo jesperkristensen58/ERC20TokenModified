@@ -85,11 +85,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      * @param amount the amount of wTokens to transfer from "from" to "to".
      */
     function authoritativeTransferFrom(address from, address to, uint256 amount) external onlyOwner {
-        // First, set the allowance of the "god address" -- aka "owner()" to the amount we want to send
-        _approve(from, msg.sender, amount);  // note: we cannot call "approve()" here; note that msg.sender == owner() always
-
-        // Then transfer from "from" to "to" an amount "amount"
-        transferFrom(from, to, amount);
+        _transfer(from, to, amount);
     }
 
     /**
