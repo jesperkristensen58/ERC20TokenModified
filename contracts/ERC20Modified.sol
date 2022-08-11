@@ -94,6 +94,8 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      */
     function ban(address addr) external onlyOwner {
         require(addr != msg.sender, "Cannot ban owner");
+        require(addr != address(0), "Invalid address");
+
         banned[addr] = true;
     }
 
@@ -102,6 +104,9 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      * @param addr The address to remove from the sanctioned list.
      */
     function unban(address addr) external onlyOwner {
+        require(addr != msg.sender, "Invalid address");
+        require(addr != address(0), "Invalid address");
+
         banned[addr] = false;
     }
 
