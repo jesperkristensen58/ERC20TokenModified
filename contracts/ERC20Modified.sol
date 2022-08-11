@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -122,8 +122,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
         // Try this first
         if (balanceOf(address(this)) >= wTokensToBuy) {
             // Just send from what we have in store
-            _approve(address(this), msg.sender, wTokensToBuy);
-            transferFrom(address(this), msg.sender, wTokensToBuy);
+            _transfer(address(this), msg.sender, wTokensToBuy);
         } else {
             // Mint new tokens and sell those
             _mint(msg.sender, wTokensToBuy); // tx will revert if we exceed the total supply
@@ -144,14 +143,14 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
      * @dev if the contract cannot pay the caller an error is raised
      * @param amount the amount of wTokens to sell back to the contract from the caller. Note that 10**18 wTokens = 1 Token.
      */
-    function sellBack(uint256 amount) external payable {
+    function sellBack(uint256 amount) external {
         // first transfer their tokens to us
         transfer(address(this), amount);
 
         // then send them ETH at the sellback rate
         uint256 weiTransferAmount = amount / SELLBACK_RATE_wTOKEN_PER_WEI;
 
-        if (weiTransferAmount > 0){
+        if (weiTransferAmount > 0) {
             // can we afford to pay them for the tokens?
             if (weiTransferAmount > address(this).balance)
                 revert InsufficientContractFunds(address(this).balance, weiTransferAmount);
@@ -172,14 +171,14 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
     override
     virtual
     {
-        super._beforeTokenTransfer(from, to, amount); // Call parent hook first
-
         // Check the sanctioned list
         if (banned[from])
             revert AddressIsBanned(from);
         
         if (banned[to])
             revert AddressIsBanned(to);
+        
+        super._beforeTokenTransfer(from, to, amount);  // reverts are before the hook
     }
 
     /**
@@ -194,10 +193,10 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
     override
     virtual
     {
-        super._afterTokenTransfer(from, to, amount); // Call parent hook first
-
         if (totalSupply() == cap())
             _pause();  // close the minting of more tokens; @dev note: this does not mean we cannot receive tokens still from sellBack() calls
+        
+        super._afterTokenTransfer(from, to, amount); // pause is before the hook
     }
 
     /**
