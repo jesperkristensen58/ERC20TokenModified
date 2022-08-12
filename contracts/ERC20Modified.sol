@@ -132,7 +132,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
     /**
      * @notice Withdraw funds received from sale of Token from the contract to the owner.
      */
-    function withdraw() external payable onlyOwner {
+    function withdraw() external onlyOwner {
         // transfer the ether in the contract to the owner
         (bool success,) = msg.sender.call{value: address(this).balance}("");
         require(success, "transfer failed");
