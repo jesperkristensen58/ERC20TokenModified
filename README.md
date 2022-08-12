@@ -37,8 +37,10 @@ ERC20 tokens don't have the ability to trigger functions on smart contracts. Use
 The smart contract should block the transaction if the smart contract does not have enough ether to pay the user.
 Users can buy and sell as they please, but of course they lose ether if they keep doing so
 
-If someone tries to mint tokens when the supply is used up and the contract isn’t holding any tokens, that operation should fail. The maximum supply should remain at 1 million
-IMPORTANT: Be aware of integer division issues!
+If someone tries to mint tokens when the supply is used up and the contract isn’t holding any tokens, that operation should fail.
+The maximum supply should remain at 1 million tokens!
+
+IMPORTANT: Be aware of integer division issues! So we need to operate in the lowest denomination of the token (which will have 18 decimals), so exactly the same as wei and ether. Our wei-equivalent is called the "wToken".
 
 <h1>How to Run the Code?</h1>
 
