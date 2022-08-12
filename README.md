@@ -51,6 +51,22 @@ This project is built with Hardhat. First, to compile the contract inside `contr
 To test the code (and run the tests inside the `tests/` directory), please run:
 
     npx hardhat test
+   
+There is a deploy script as well.
+
+    npx hardhat run scripts/deploy.js
+
+You should get a similar output as this:
+
+   Deploying contracts with the account: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+   Account balance: 10000000000000000000000
+   ERC20 Modified Contract address: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+
+This means the contract has deployed. Change the network settings to whatever network you want to deploy to. You can then run:
+
+    npx hardhat run scripts/deploy.js --network rinkeby
+
+But again, be sure to add your account details in the network part of the hardhat config file.
 
 ## Contact
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/cryptojesperk.svg?style=social&label=Follow%20%40cryptojesperk)](https://twitter.com/cryptojesperk)
