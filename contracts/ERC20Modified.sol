@@ -4,7 +4,6 @@ pragma solidity 0.8.9;
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 
 // *-- Errors
 error AddressIsBanned(address bannedAddress);
@@ -15,7 +14,7 @@ error InsufficientContractFunds(uint256 contractBalance, uint256 attemptedTransf
  * @title A modified ERC20 token implementation based on the Openzeppelin standard.
  * @author Jesper Kristensen (@cryptojesperk)
  */
-contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
+contract ERC20Modified is ERC20, ERC20Capped, Ownable {
     // *---- settings
     string constant TOKEN_NAME = "Jesper";
     string constant TOKEN_SYMBOL = "JK";
