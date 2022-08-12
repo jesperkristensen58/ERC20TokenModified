@@ -7,10 +7,8 @@ For how to run this code, please see the bottom of this documentation.
 The task is this: "You must extend the OpenZeppelin ERC20 implementation. You will may need to override some of the internal functions to achieve the specified functionality."
 
 <h2>Deliverables, here is what I want to do</h2>
-    ERC20 with god-mode
-    ERC20 with sanctions
-    ERC20 with token sale
-    ERC20 with token sale and partial refunds
+Build a God Mode feature into the ERC20 (an owner address that can do whatever they want): "ERC20 with god-mode".
+Implement a sanctions feature: "ERC20 with sanctions". Implement a Token Sale feature (we are selling our token for ether). Implement a partial refunc feature: ERC20 with token sale and partial refunds.
 
 <h2>Description of Deliverables</h2>
 You must extend the OpenZeppelin ERC20 implementation. You will may need to override some of the internal functions to achieve the specified functionality.
