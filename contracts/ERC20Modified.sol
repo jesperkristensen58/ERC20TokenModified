@@ -183,24 +183,6 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable, Pausable {
     }
 
     /**
-     * @dev Check that the total supply has not been exceeded and that if the total supply is hit, we pause the minting of more tokens.
-     * @dev when we hit the token supply limit this will pause the contract (paused() == true); which means we cannot mint new tokens. But we can still sell tokens from our internal storage (balanceOf(address(this))).
-     * @param from the address to transfer tokens from
-     * @param to the address to transfer tokens to
-     * @param amount the amount to transfer
-     */
-    function _afterTokenTransfer(address from, address to, uint256 amount)
-    internal
-    override
-    virtual
-    {
-        if (totalSupply() == cap())
-            _pause();  // close the minting of more tokens; @dev note: this does not mean we cannot receive tokens still from sellBack() calls
-        
-        super._afterTokenTransfer(from, to, amount); // pause is before the hook
-    }
-
-    /**
      * @dev we override the _mint function in ERC20 and ERC20Capped.
      * @param account the account to mint tokens to.
      * @param amount the amount of tokens to mint.
