@@ -1,11 +1,12 @@
-<h1>A modified ERC20 Token! Based on the OpenZeppelin Standard.</h1>
+<h1>A modified ERC20 Token with Custom Features</h1>
 
-We are going to implemented multiple changes to the ERC20 contract to create a custom Token.
+<h2>Overview</h2>
+In this contract I am going to implemented multiple changes to the ERC20 contract to create a custom Token.
 For how to run this code, please see the bottom of this documentation.
 
 The task is this: "You must extend the OpenZeppelin ERC20 implementation. You will may need to override some of the internal functions to achieve the specified functionality."
 
-<h2>Deliverables</h2>
+<h2>Deliverables, here is what I want to do</h2>
     ERC20 with god-mode
     ERC20 with sanctions
     ERC20 with token sale
