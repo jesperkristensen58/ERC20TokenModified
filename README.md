@@ -1,5 +1,7 @@
 <h1>A modified ERC20 Token with Custom Features</h1>
 
+![Modified ERC20 Token](erc20.webp?raw=true "My Modified ERC20 Token!")
+
 <h2>Overview</h2>
 In this contract I am going to implemented multiple changes to the ERC20 contract to create a custom Token.
 For how to run this code, please see the bottom of this documentation.
