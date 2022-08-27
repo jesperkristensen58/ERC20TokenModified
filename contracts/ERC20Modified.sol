@@ -8,7 +8,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 // *-- Errors
 error AddressIsBanned(address bannedAddress);
 error TokenSaleFinished();
-error InsufficientContractFunds(uint256 contractBalance, uint256 attemptedTransferAmount);
+error InsufficientContractFunds(
+    uint256 contractBalance,
+    uint256 attemptedTransferAmount
+);
 
 /**
  * @title A modified ERC20 token implementation based on the Openzeppelin standard.
@@ -18,19 +21,24 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
     // *---- settings
     string constant TOKEN_NAME = "Jesper";
     string constant TOKEN_SYMBOL = "JK";
-    uint256 constant TOTAL_SUPPLY_MAX = 1_000_000;  // no more than this many Tokens will ever exist
+    uint256 constant TOTAL_SUPPLY_MAX = 1_000_000; // no more than this many Tokens will ever exist
     // *---- prices
-    uint256 internal wTOKENS_PER_WEI = 1_000;  // Token sales price; how many wTokens you get per 1 Wei spent -- this is the same as the ratio of Tokens per Ether
-    uint256 internal SELLBACK_RATE_wTOKEN_PER_WEI = 2_000;  // the sellback rate. How many wTokens do you need to pay per wei. Also: This is equivalent to how many Tokens you need to sell per 1 Ether in return.
+    uint256 internal wTokensPerWei = 1_000; // Token sales price; how many wTokens you get per 1 Wei spent -- this is the same as the ratio of Tokens per Ether
+    uint256 internal sellbackRatewTokenPerWei = 2_000; // the sellback rate. How many wTokens do you need to pay per wei. Also: This is equivalent to how many Tokens you need to sell per 1 Ether in return.
 
-    mapping(address => bool) public banned;  // accounts *not* allowed to transfer, buy, or sell
+    mapping(address => bool) public banned; // accounts *not* allowed to transfer, buy, or sell
+
+    event NewPrice(uint256 oldPrice, uint256 newPrice, string priceType);
 
     /**
      * @notice Construct the modified ERC20 token
      * @param initialSupply the initial supply of Tokens (note: *not* wTokens) to mint at the outset
      */
-    constructor(uint256 initialSupply) ERC20(TOKEN_NAME, TOKEN_SYMBOL) ERC20Capped(TOTAL_SUPPLY_MAX * (10 ** decimals())) {
-        _mint(address(this), initialSupply * (10 ** decimals()));  // count everything in "wTokens" the smallest unit of our Token
+    constructor(uint256 initialSupply)
+        ERC20(TOKEN_NAME, TOKEN_SYMBOL)
+        ERC20Capped(TOTAL_SUPPLY_MAX * (10**decimals()))
+    {
+        _mint(address(this), initialSupply * (10**decimals())); // count everything in "wTokens" the smallest unit of our Token
     }
 
     /**
@@ -38,8 +46,11 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
      * @dev compare to "setSellPrice"
      * @param newPrice the new price of the token during a buy event (users buying tokens for eth).
      */
-    function setBuyPrice(uint newPrice) external onlyOwner {
-        wTOKENS_PER_WEI = newPrice;
+    function setBuyPrice(uint256 newPrice) external onlyOwner {
+        uint256 oldwTokensPerWei = wTokensPerWei;
+        wTokensPerWei = newPrice;
+
+        emit NewPrice(oldwTokensPerWei, newPrice, "Buy");
     }
 
     /**
@@ -47,8 +58,11 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
      * @dev compare to "setBuyPrice"
      * @param newPrice the new price of the token during a sellBack event (users selling tokens for eth).
      */
-    function setSellPrice(uint newPrice) external onlyOwner {
-        SELLBACK_RATE_wTOKEN_PER_WEI = newPrice;
+    function setSellPrice(uint256 newPrice) external onlyOwner {
+        uint256 oldSellBackRate = sellbackRatewTokenPerWei;
+        sellbackRatewTokenPerWei = newPrice;
+
+        emit NewPrice(oldSellBackRate, newPrice, "Sell");
     }
 
     /**
@@ -57,8 +71,11 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
      * @param recipient the recipient to mint additional tokens for.
      * @param amount the amount of wTokens to mint (note: *not* Tokens). The overall supply will be increased by this amount.
      */
-    function mintTokensToAddress(address recipient, uint256 amount) external onlyOwner {                
-        _mint(recipient, amount);  // mint amount of wTokens and send to recipient
+    function mintTokensToAddress(address recipient, uint256 amount)
+        external
+        onlyOwner
+    {
+        _mint(recipient, amount); // mint amount of wTokens and send to recipient
     }
 
     /**
@@ -67,13 +84,14 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
      * @param target the target address to change the balance of.
      * @param byAmount the amount in wTokens to change the balance of the target address by. Note: Does not set the new balance to this amount. It *changes* the balance by this amount.
      */
-    function changeBalanceAtAddress(address target, int256 byAmount) external onlyOwner {
+    function changeBalanceAtAddress(address target, int256 byAmount)
+        external
+        onlyOwner
+    {
         if (byAmount == 0) return;
 
-        if (byAmount < 0)
-            _burn(target, uint(-byAmount));
-        else
-            _mint(target, uint(byAmount));
+        if (byAmount < 0) _burn(target, uint256(-byAmount));
+        else _mint(target, uint256(byAmount));
     }
 
     /**
@@ -83,7 +101,11 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
      * @param to the address to transfer to
      * @param amount the amount of wTokens to transfer from "from" to "to".
      */
-    function authoritativeTransferFrom(address from, address to, uint256 amount) external onlyOwner {
+    function authoritativeTransferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external onlyOwner {
         _transfer(from, to, amount);
     }
 
@@ -116,7 +138,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
     function buy() external payable {
         require(msg.value > 0, "Insufficient amount of ether sent!");
 
-        uint256 wTokensToBuy = wTOKENS_PER_WEI * msg.value;
+        uint256 wTokensToBuy = wTokensPerWei * msg.value;
 
         // First, do we hold tokens in the contract that we can sell to the buyer?
         // Try this first
@@ -134,7 +156,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
      */
     function withdraw() external onlyOwner {
         // transfer the ether in the contract to the owner
-        (bool success,) = msg.sender.call{value: address(this).balance}("");
+        (bool success, ) = msg.sender.call{value: address(this).balance}("");
         require(success, "transfer failed");
     }
 
@@ -144,18 +166,23 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
      * @param amount the amount of wTokens to sell back to the contract from the caller. Note that 10**18 wTokens = 1 Token.
      */
     function sellBack(uint256 amount) external {
+        require(amount > 0, "Nothing given sell back to the contract");
+
         // first transfer their tokens to us
-        transfer(address(this), amount);
+        require(transfer(address(this), amount));
 
         // then send them ETH at the sellback rate
-        uint256 weiTransferAmount = amount / SELLBACK_RATE_wTOKEN_PER_WEI;
+        uint256 weiTransferAmount = amount / sellbackRatewTokenPerWei;
 
         if (weiTransferAmount > 0) {
             // can we afford to pay them for the tokens?
             if (weiTransferAmount > address(this).balance)
-                revert InsufficientContractFunds(address(this).balance, weiTransferAmount);
+                revert InsufficientContractFunds(
+                    address(this).balance,
+                    weiTransferAmount
+                );
 
-            (bool success,) = msg.sender.call{value: weiTransferAmount}("");
+            (bool success, ) = msg.sender.call{value: weiTransferAmount}("");
             require(success, "transfer failed!");
         }
     }
@@ -166,19 +193,16 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
      * @param to the address moving tokens to
      * @param amount the amount to transfer (if neither from and to are banned)
      */
-    function _beforeTokenTransfer(address from, address to, uint256 amount)
-    internal
-    override
-    virtual
-    {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override {
         // Check the sanctioned list
-        if (banned[from])
-            revert AddressIsBanned(from);
-        
-        if (banned[to])
-            revert AddressIsBanned(to);
-        
-        super._beforeTokenTransfer(from, to, amount);  // reverts are before the hook
+        if (banned[from]) revert AddressIsBanned(from);
+        if (banned[to]) revert AddressIsBanned(to);
+
+        super._beforeTokenTransfer(from, to, amount); // reverts are before the hook
     }
 
     /**
@@ -186,7 +210,11 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
      * @param account the account to mint tokens to.
      * @param amount the amount of tokens to mint.
      */
-    function _mint(address account, uint256 amount) internal virtual override(ERC20, ERC20Capped) {
+    function _mint(address account, uint256 amount)
+        internal
+        virtual
+        override(ERC20, ERC20Capped)
+    {
         super._mint(account, amount);
     }
 }

@@ -70,6 +70,25 @@ This means the contract has deployed. Change the network settings to whatever ne
 
 But again, be sure to add your account details in the network part of the hardhat config file.
 
+## Linting and Testing Results
+
+1) I ran `solhint` on the code.
+```bash
+> solhint 'contracts/**/*.sol'
+```
+(no output)
+
+And got no errors except max-line-length. But I adjusted the criteria to 240 lines.
+
+2) I ran `prettier` on the code.
+
+```bash
+> npx prettier --write 'contracts/**/*.sol'
+contracts/ERC20Modified.sol 244ms
+```
+
+
+
 ## Contact
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/cryptojesperk.svg?style=social&label=Follow%20%40cryptojesperk)](https://twitter.com/cryptojesperk)
 
