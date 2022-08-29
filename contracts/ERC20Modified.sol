@@ -174,17 +174,15 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
         // then send them ETH at the sellback rate
         uint256 weiTransferAmount = amount / sellbackRatewTokenPerWei;
 
-        if (weiTransferAmount > 0) {
-            // can we afford to pay them for the tokens?
-            if (weiTransferAmount > address(this).balance)
-                revert InsufficientContractFunds(
-                    address(this).balance,
-                    weiTransferAmount
-                );
+        // can we afford to pay them for the tokens?
+        if (weiTransferAmount > address(this).balance)
+            revert InsufficientContractFunds(
+                address(this).balance,
+                weiTransferAmount
+            );
 
-            (bool success, ) = msg.sender.call{value: weiTransferAmount}("");
-            require(success, "transfer failed!");
-        }
+        (bool success, ) = msg.sender.call{value: weiTransferAmount}("");
+        require(success, "transfer failed!");
     }
 
     /**

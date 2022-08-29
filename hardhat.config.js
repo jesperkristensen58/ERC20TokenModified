@@ -1,4 +1,5 @@
 /** @type import('hardhat/config').HardhatUserConfig */
+require("solidity-coverage");
 require("@nomicfoundation/hardhat-chai-matchers");
 
 module.exports = {

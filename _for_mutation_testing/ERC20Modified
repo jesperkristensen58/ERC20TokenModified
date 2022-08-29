@@ -1,0 +1,123 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.16;
+
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+error AddressIsBanned(address bannedAddress);
+error TokenSaleFinished();
+error InsufficientContractFunds(
+    uint256 contractBalance,
+    uint256 attemptedTransferAmount
+);
+
+contract ERC20Modified is ERC20, ERC20Capped, Ownable {
+    string constant TOKEN_NAME = "Jesper";
+    string constant TOKEN_SYMBOL = "JK";
+    uint256 constant TOTAL_SUPPLY_MAX = 1_000_000;
+    uint256 internal wTokensPerWei = 1_000;
+    uint256 internal sellbackRatewTokenPerWei = 2_000;
+
+    mapping(address => bool) public banned;
+    event NewPrice(uint256 oldPrice, uint256 newPrice, string priceType);
+
+    constructor(uint256 initialSupply)
+        ERC20(TOKEN_NAME, TOKEN_SYMBOL)
+        ERC20Capped(TOTAL_SUPPLY_MAX * (10**decimals()))
+    {
+        _mint(address(this), initialSupply * (10**decimals()));
+    }
+
+    function setBuyPrice(uint256 newPrice) external onlyOwner {
+        uint256 oldwTokensPerWei = wTokensPerWei;
+        wTokensPerWei = newPrice;
+        emit NewPrice(oldwTokensPerWei, newPrice, "Buy");
+    }
+    function setSellPrice(uint256 newPrice) external onlyOwner {
+        uint256 oldSellBackRate = sellbackRatewTokenPerWei;
+        sellbackRatewTokenPerWei = newPrice;
+        emit NewPrice(oldSellBackRate, newPrice, "Sell");
+    }
+
+    function mintTokensToAddress(address recipient, uint256 amount)
+        external
+        onlyOwner
+    {
+        _mint(recipient, amount); // mint amount of wTokens and send to recipient
+    }
+    function changeBalanceAtAddress(address target, int256 byAmount)
+        external
+        onlyOwner
+    {
+        if (byAmount == 0) return;
+        if (byAmount < 0) _burn(target, uint256(-byAmount));
+        else _mint(target, uint256(byAmount));
+    }
+
+    function authoritativeTransferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external onlyOwner {
+        _transfer(from, to, amount);
+    }
+
+    function ban(address addr) external onlyOwner {
+        require(addr != msg.sender, "Cannot ban owner");
+        require(addr != address(0), "Invalid address");
+        banned[addr] = true;
+    }
+
+    function unban(address addr) external onlyOwner {
+        require(addr != msg.sender, "Invalid address");
+        require(addr != address(0), "Invalid address");
+        banned[addr] = false;
+    }
+
+    function buy() external payable {
+        require(msg.value > 0, "Insufficient amount of ether sent!");
+        uint256 wTokensToBuy = wTokensPerWei * msg.value;
+        if (balanceOf(address(this)) >= wTokensToBuy) {
+            _transfer(address(this), msg.sender, wTokensToBuy);
+        } else {
+            _mint(msg.sender, wTokensToBuy);
+        }
+    }
+
+    function withdraw() external onlyOwner {
+        (bool success, ) = msg.sender.call{value: address(this).balance}("");
+        require(success, "transfer failed");
+    }
+
+    function sellBack(uint256 amount) external {
+        require(amount > 0, "Nothing given sell back to the contract");
+        require(transfer(address(this), amount));
+        uint256 weiTransferAmount = amount / sellbackRatewTokenPerWei;
+        if (weiTransferAmount > address(this).balance)
+            revert InsufficientContractFunds(
+                address(this).balance,
+                weiTransferAmount
+            );
+        (bool success, ) = msg.sender.call{value: weiTransferAmount}("");
+        require(success, "transfer failed!");
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override {
+        if (banned[from]) revert AddressIsBanned(from);
+        if (banned[to]) revert AddressIsBanned(to);
+        super._beforeTokenTransfer(from, to, amount);
+    }
+
+    function _mint(address account, uint256 amount)
+        internal
+        virtual
+        override(ERC20, ERC20Capped)
+    {
+        super._mint(account, amount);
+    }
+}

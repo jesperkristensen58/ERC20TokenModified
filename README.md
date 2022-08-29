@@ -87,7 +87,43 @@ And got no errors except max-line-length. But I adjusted the criteria to 240 lin
 contracts/ERC20Modified.sol 244ms
 ```
 
+3) I ran `slither` on the code:
+```bash
+slither .
+```
+which gave a report on which parts of the code *could* be dangerous. I reviewed said report and implemented any suggested (meaningful/correct) changes.
 
+4) I ran a coverage report on the code (you have to `npm install` the coverage add-on and add to the hardhat config file):
+```bash
+npx hardhat coverage
+```
+
+When I had the coverage to 100% I then ran mutation testing.
+
+5) I used Vertigo for mutation testing.
+
+Install with:
+```bash
+pip3 install --user eth-vertigo
+```
+then run with (results will be stored in the file `vertigo_results.md`; in my case I did not have the `bin/` folder in my `$PATH` so had to workaround that)
+```bash
+/Users/<my username>/.local/bin/vertigo run --hardhat-parallel 8 --output vertigo_results.md
+```
+This is during the mutation testing running:
+```bash
+/Users/<user name>/.local/bin/vertigo run --hardhat-parallel 8 --output vertigo_results.md
+[*] Starting mutation testing
+[*] Starting analysis on project
+[*] Initializing campaign run
+[*] Checking validity of project
+[+] The project is valid
+[*] Storing compilation results
+[*] Running analysis on 39 mutants
+ 18%|████████████████████████▏                                                                                                              | 7/39 [01:25<01:52,  3.52s/mutant]
+```
+
+I implemented some additional tests suggested by the mutation testing.
 
 ## Contact
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/cryptojesperk.svg?style=social&label=Follow%20%40cryptojesperk)](https://twitter.com/cryptojesperk)
