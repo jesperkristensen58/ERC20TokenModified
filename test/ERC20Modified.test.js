@@ -1,6 +1,6 @@
 const {expect} = require('chai');
 const {BigNumber} = require('ethers');
-const {ethers} = require('hardhat');
+const {ethers, upgrades} = require('hardhat');
 
 const GAS_BUFFER = ethers.utils.parseEther('0.01');
 
@@ -15,7 +15,8 @@ describe('ERC20Modified Contract', function() {
     deployeraddy = deployer.address;
     account1 = acc1.address;
     ERC20Modified = await ethers.getContractFactory('ERC20Modified');
-    erc20Modified = await ERC20Modified.deploy(1000);
+    // use the upgradeable pattern
+    erc20Modified = await upgrades.deployProxy(ERC20Modified, [1000]);
     await erc20Modified.deployed();
   });
 
@@ -33,20 +34,20 @@ describe('ERC20Modified Contract', function() {
 
   it('should deploy with other token amounts', async () => {
     ERC20Modified = await ethers.getContractFactory('ERC20Modified');
-    erc20Modified = await ERC20Modified.deploy(1);
+    erc20Modified = await upgrades.deployProxy(ERC20Modified, [1]);
     await erc20Modified.deployed();
 
     expect(await erc20Modified.totalSupply()).to.equal(ethers.utils.parseEther('1'));
 
     // Try 0
-    erc20Modified = await ERC20Modified.deploy(0);
+    erc20Modified = await upgrades.deployProxy(ERC20Modified, [0]);
     await erc20Modified.deployed();
 
     expect(await erc20Modified.totalSupply()).to.equal(ethers.utils.parseEther('0'));
 
     // Negative number
     try {
-      await expect(ERC20Modified.deploy(-2)).to.be.revertedWith('Error: value out-of-bounds');
+      await expect(upgrades.deployProxy(ERC20Modified, [-2]));
     } catch (err) {
       expect(err.argument).to.equal('initialSupply');
       expect(err.reason).to.equal('value out-of-bounds');
@@ -66,7 +67,7 @@ describe('Test God Mode', function() {
     account2 = acc2.address;
 
     const ERC20Modified = await ethers.getContractFactory('ERC20Modified');
-    erc20Modified = await ERC20Modified.deploy(1000);
+    erc20Modified = await upgrades.deployProxy(ERC20Modified, [1000]);
     await erc20Modified.deployed();
   });
 

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.16;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 // *-- Errors
 error AddressIsBanned(address bannedAddress);
@@ -17,27 +17,33 @@ error InsufficientContractFunds(
  * @title A modified ERC20 token implementation based on the Openzeppelin standard.
  * @author Jesper Kristensen (@cryptojesperk)
  */
-contract ERC20Modified is ERC20, ERC20Capped, Ownable {
+contract ERC20Modified is OwnableUpgradeable, ERC20Upgradeable, ERC20CappedUpgradeable {
     // *---- settings
     string constant TOKEN_NAME = "Jesper";
     string constant TOKEN_SYMBOL = "JK";
     uint256 constant TOTAL_SUPPLY_MAX = 1_000_000; // no more than this many Tokens will ever exist
     // *---- prices
-    uint256 internal wTokensPerWei = 1_000; // Token sales price; how many wTokens you get per 1 Wei spent -- this is the same as the ratio of Tokens per Ether
-    uint256 internal sellbackRatewTokenPerWei = 2_000; // the sellback rate. How many wTokens do you need to pay per wei. Also: This is equivalent to how many Tokens you need to sell per 1 Ether in return.
+    uint256 wTokensPerWei; // Token sales price; how many wTokens you get per 1 Wei spent -- this is the same as the ratio of Tokens per Ether
+    uint256 sellbackRatewTokenPerWei; // the sellback rate. How many wTokens do you need to pay per wei. Also: This is equivalent to how many Tokens you need to sell per 1 Ether in return.
 
     mapping(address => bool) public banned; // accounts *not* allowed to transfer, buy, or sell
 
     event NewPrice(uint256 oldPrice, uint256 newPrice, string priceType);
 
     /**
-     * @notice Construct the modified ERC20 token
+     * @notice Initialize the modified ERC20 token (upgradeable pattern)
      * @param initialSupply the initial supply of Tokens (note: *not* wTokens) to mint at the outset
      */
-    constructor(uint256 initialSupply)
-        ERC20(TOKEN_NAME, TOKEN_SYMBOL)
-        ERC20Capped(TOTAL_SUPPLY_MAX * (10**decimals()))
+    function initialize(uint256 initialSupply) public initializer
     {
+        // initialize our parents
+        __Ownable_init();
+        __ERC20_init(TOKEN_NAME, TOKEN_SYMBOL);
+        __ERC20Capped_init(TOTAL_SUPPLY_MAX * (10**decimals()));
+
+        wTokensPerWei = 1_000;
+        sellbackRatewTokenPerWei = 2_000;
+
         _mint(address(this), initialSupply * (10**decimals())); // count everything in "wTokens" the smallest unit of our Token
     }
 
@@ -211,7 +217,7 @@ contract ERC20Modified is ERC20, ERC20Capped, Ownable {
     function _mint(address account, uint256 amount)
         internal
         virtual
-        override(ERC20, ERC20Capped)
+        override(ERC20Upgradeable, ERC20CappedUpgradeable)
     {
         super._mint(account, amount);
     }
